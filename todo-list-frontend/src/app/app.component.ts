@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {Todo, TodoService} from "./todo.service";
-import {Observable} from "rxjs";
+import {Observable, BehaviorSubject, combineLatest} from "rxjs";
+import {map} from "rxjs/operators";
 
 @Component({
   selector: 'app-root',
@@ -11,8 +12,8 @@ import {Observable} from "rxjs";
       </h1>
     </div>
     <div class="list">
-      <label for="search">Search...</label>
-      <input id="search" type="text">
+  <label for="search">Search...</label>
+  <input id="search" type="text" [(ngModel)]="searchText" (ngModelChange)="onSearchChange($event)">
       <app-progress-bar *ngIf="loading"></app-progress-bar>
       <app-todo-item *ngFor="let todo of todos$ | async" [item]="todo"></app-todo-item>
     </div>
@@ -22,12 +23,28 @@ import {Observable} from "rxjs";
 export class AppComponent {
   readonly todos$: Observable<Todo[]>;
   loading = true;
+  searchText = '';
+  private searchText$ = new BehaviorSubject<string>('');
 
   constructor(todoService: TodoService) {
-    this.todos$ = todoService.getAll();
-    this.todos$.subscribe({
+    const allTodos$ = todoService.getAll();
+    this.todos$ = combineLatest([
+      allTodos$,
+      this.searchText$
+    ]).pipe(
+      map(([todos, search]) => {
+        this.loading = false;
+        if (!search) return todos;
+        return todos.filter(todo => todo.task.toLowerCase().includes(search.toLowerCase()));
+      })
+    );
+    allTodos$.subscribe({
       next: () => this.loading = false,
       error: () => this.loading = false
     });
+  }
+
+  onSearchChange(value: string) {
+    this.searchText$.next(value);
   }
 }
