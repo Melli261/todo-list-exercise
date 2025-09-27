@@ -9,6 +9,7 @@
 .task-indicator {
   display: inline-block;
   width: calc(100% - 37px);
+  cursor: pointer;
 }
 
 .priority-indicator {
