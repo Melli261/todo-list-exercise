@@ -43,3 +43,20 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Node / Angular
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Gradle / Java
+**/build/
+**/.gradle/
+
+# IDE / OS
+**/.idea/
+**/.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
