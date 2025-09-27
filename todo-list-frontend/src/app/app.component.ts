@@ -13,17 +13,21 @@ import {Observable} from "rxjs";
     <div class="list">
       <label for="search">Search...</label>
       <input id="search" type="text">
-      <app-progress-bar></app-progress-bar>
+      <app-progress-bar *ngIf="loading"></app-progress-bar>
       <app-todo-item *ngFor="let todo of todos$ | async" [item]="todo"></app-todo-item>
     </div>
   `,
   styleUrls: ['app.component.scss']
 })
 export class AppComponent {
-
   readonly todos$: Observable<Todo[]>;
+  loading = true;
 
   constructor(todoService: TodoService) {
     this.todos$ = todoService.getAll();
+    this.todos$.subscribe({
+      next: () => this.loading = false,
+      error: () => this.loading = false
+    });
   }
 }
