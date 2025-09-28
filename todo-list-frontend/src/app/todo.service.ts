@@ -1,6 +1,7 @@
-import {Injectable} from '@angular/core';
-import {Observable, of} from "rxjs";
-import {delay, map} from "rxjs/operators";
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface Todo {
   id: number;
@@ -8,37 +9,37 @@ export interface Todo {
   priority: 1 | 2 | 3;
 }
 
-let mockData: Todo[] = [
-  { id: 0, task: 'Implement loading - frontend only', priority: 1 },
-  { id: 1, task: 'Implement search - frontend only', priority: 2 },
-  { id: 2, task: 'Implement delete on click - frontend only', priority: 1 },
-  { id: 3, task: 'Replace mock service by integrating backend', priority: 3 },
-];
-
-function removeFromMockData(id: number) {
-  mockData = mockData.filter(todo => todo.id !== id);
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TodoService {
+  // besser: environment.apiBase + '/todos'
+  private apiUrl = 'http://localhost:8099/api/todos';
+
+  constructor(private http: HttpClient) {}
 
   getAll(): Observable<Todo[]> {
-    return of(undefined).pipe(delay(2_000), map(() => mockData));
+    return this.http.get<Todo[]>(this.apiUrl).pipe(
+      catchError(err => {
+        console.error('Error fetching todos', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  create(todo: Todo): Observable<Todo> {
+    return this.http.post<Todo>(this.apiUrl, todo).pipe(
+      catchError(err => {
+        console.error('Error creating todo', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   remove(id: number): Observable<void> {
-    return new Observable<void>(observer => {
-      setTimeout(() => {
-        if (Math.random() < .8) {
-          removeFromMockData(id);
-          observer.next();
-        } else {
-          observer.error('Failed');
-        }
-        observer.complete();
-      }, 2_000)
-    })
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => {
+        console.error('Error deleting todo', err);
+        return throwError(() => err);
+      })
+    );
   }
 }
